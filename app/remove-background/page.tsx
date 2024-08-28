@@ -7,42 +7,46 @@ import {
   AutoModel,
   AutoProcessor,
   RawImage,
+  PreTrainedModel,
+  Processor,
 } from "@huggingface/transformers";
 
 import JSZip from "jszip";
 import { saveAs } from "file-saver";
 
 export default function RemoveBackground() {
-  const [images, setImages] = useState([]);
-  const [processedImages, setProcessedImages] = useState([]);
-  const [isProcessing, setIsProcessing] = useState(false);
-  const [isDownloadReady, setIsDownloadReady] = useState(false);
-  const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState(null);
+  const [images, setImages] = useState<string[]>([]);
+  const [processedImages, setProcessedImages] = useState<string[]>([]);
+  const [isProcessing, setIsProcessing] = useState<boolean>(false);
+  const [isDownloadReady, setIsDownloadReady] = useState<boolean>(false);
+  const [isLoading, setIsLoading] = useState<boolean>(true);
+  const [error, setError] = useState<Error | null>(null);
 
-  const modelRef = useRef(null);
-  const processorRef = useRef(null);
+  const modelRef = useRef<PreTrainedModel | null>(null);
+  const processorRef = useRef<Processor | null>(null);
 
   useEffect(() => {
     (async () => {
       try {
-        if (!navigator.gpu) {
+        if (!("gpu" in navigator)) {
           throw new Error("WebGPU is not supported in this browser.");
         }
         const model_id = "Xenova/modnet";
-        env.backends.onnx.wasm.proxy = false;
-        modelRef.current ??= await AutoModel.from_pretrained(model_id, {
+        if (env.backends.onnx.wasm) {
+          env.backends.onnx.wasm.proxy = false;
+        }
+        modelRef.current = await AutoModel.from_pretrained(model_id, {
           device: "webgpu",
         });
-        processorRef.current ??= await AutoProcessor.from_pretrained(model_id);
+        processorRef.current = await AutoProcessor.from_pretrained(model_id);
       } catch (err) {
-        setError(err);
+        setError(err instanceof Error ? err : new Error(String(err)));
       }
       setIsLoading(false);
     })();
   }, []);
 
-  const onDrop = useCallback((acceptedFiles) => {
+  const onDrop = useCallback((acceptedFiles: File[]) => {
     setImages((prevImages) => [
       ...prevImages,
       ...acceptedFiles.map((file) => URL.createObjectURL(file)),
@@ -62,7 +66,7 @@ export default function RemoveBackground() {
     },
   });
 
-  const removeImage = (index) => {
+  const removeImage = (index: number) => {
     setImages((prevImages) => prevImages.filter((_, i) => i !== index));
     setProcessedImages((prevProcessed) =>
       prevProcessed.filter((_, i) => i !== index)
@@ -75,6 +79,12 @@ export default function RemoveBackground() {
 
     const model = modelRef.current;
     const processor = processorRef.current;
+
+    if (!model || !processor) {
+      console.error("Model or processor not initialized");
+      setIsProcessing(false);
+      return;
+    }
 
     for (let i = 0; i < images.length; ++i) {
       // Load image
@@ -99,6 +109,11 @@ export default function RemoveBackground() {
       canvas.height = img.height;
       const ctx = canvas.getContext("2d");
 
+      if (!ctx) {
+        console.error("Could not get 2D context from canvas");
+        continue;
+      }
+
       // Draw original image output to canvas
       ctx.drawImage(img.toCanvas(), 0, 0);
 
@@ -122,9 +137,15 @@ export default function RemoveBackground() {
     const zip = new JSZip();
     const promises = images.map(
       (image, i) =>
-        new Promise((resolve) => {
+        new Promise<void>((resolve) => {
           const canvas = document.createElement("canvas");
           const ctx = canvas.getContext("2d");
+
+          if (!ctx) {
+            console.error("Could not get 2D context from canvas");
+            resolve();
+            return;
+          }
 
           const img = new Image();
           img.src = processedImages[i] || image;
@@ -137,7 +158,7 @@ export default function RemoveBackground() {
               if (blob) {
                 zip.file(`image-${i + 1}.png`, blob);
               }
-              resolve(null);
+              resolve();
             }, "image/png");
           };
         })
@@ -155,7 +176,7 @@ export default function RemoveBackground() {
     setIsDownloadReady(false);
   };
 
-  const copyToClipboard = async (url) => {
+  const copyToClipboard = async (url: string) => {
     try {
       // Fetch the image from the URL and convert it to a Blob
       const response = await fetch(url);
@@ -173,7 +194,7 @@ export default function RemoveBackground() {
     }
   };
 
-  const downloadImage = (url) => {
+  const downloadImage = (url: string) => {
     const link = document.createElement("a");
     link.href = url;
     link.download = "image.png";
