@@ -17,7 +17,6 @@ export default function RootLayout({
     <html lang="en">
       <body className="flex">
         <Aside />
-
         <AntdRegistry>{children}</AntdRegistry>
       </body>
     </html>
