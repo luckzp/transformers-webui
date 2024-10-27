@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import "./globals.css";
 import { AntdRegistry } from "@ant-design/nextjs-registry";
 import Aside from "./components/aside";
+import { GoogleAnalytics } from "@next/third-parties/google";
 
 export const metadata: Metadata = {
   title: "Transformers WebUI",
@@ -19,6 +20,7 @@ export default function RootLayout({
         <Aside />
         <AntdRegistry>{children}</AntdRegistry>
       </body>
+      <GoogleAnalytics gaId="G-2QDW4HK465" />
     </html>
   );
 }
