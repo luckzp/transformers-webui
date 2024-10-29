@@ -9,9 +9,6 @@ export const metadata: Metadata = {
   description:
     "Interactive web interface for running Transformers.js models. Perform machine learning tasks directly in your browser.",
   keywords: "transformers.js, machine learning, AI, web interface, browser ML",
-  icons: {
-    icon: "/logo.svg",
-  },
   robots: {
     index: true,
     follow: true,
