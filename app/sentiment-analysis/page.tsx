@@ -55,10 +55,10 @@ export default function Home() {
   }, []);
 
   return (
-    <main className="flex min-h-screen mx-auto flex-col items-center p-6">
+    <main className="flex min-h-screen mx-auto flex-col items-center p-8">
       <h1 className="text-5xl font-bold mb-2 text-center">Transformers.js</h1>
       <h2 className="text-2xl mb-4 text-center">
-        Next.js template (client-side)
+        Sentiment Analysis For English Text
       </h2>
       <input
         type="text"

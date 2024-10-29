@@ -10,22 +10,22 @@ export default function Aside() {
 
   const isActive = (href: string) => {
     // If the pathname is root ("/"), default to "/remove-background"
-    if (pathname === "/") return href === "/remove-background";
+    if (pathname === "/") return href === "/sentiment-analysis";
     return pathname === href;
   };
 
   const menuItems = [
-    {
-      href: "/remove-background",
-      label: "Remove Background",
-      icon: "/background_remove.svg",
-    },
     {
       href: "/sentiment-analysis",
       label: "Sentiment Analysis",
       icon: "/sentiment-analysis.svg",
     },
     { href: "/translator", label: "Translator", icon: "/translator.svg" },
+    {
+      href: "/remove-background",
+      label: "Remove Background",
+      icon: "/background_remove.svg",
+    },
   ];
 
   return (
